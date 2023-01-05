@@ -8,6 +8,7 @@ import './App.css';
  */
 interface IState {
   data: ServerRespond[],
+  showGraph: boolean,
 }
 
 /**
@@ -22,6 +23,8 @@ class App extends Component<{}, IState> {
       // data saves the server responds.
       // We use this state to parse data down to the child element (Graph) as element property
       data: [],
+      // sets the showGraph value to false as the initial state
+      showGraph: false,
     };
   }
 
@@ -29,18 +32,35 @@ class App extends Component<{}, IState> {
    * Render Graph react component with state.data parse as property data
    */
   renderGraph() {
-    return (<Graph data={this.state.data}/>)
+    // condition which makes sure graph only renders when the showGraph variable is set to true
+    if (this.state.showGraph){
+      return (<Graph data={this.state.data}/>)
+    }
+    
   }
 
   /**
    * Get new data from server and update the state with the new data
    */
   getDataFromServer() {
-    DataStreamer.getData((serverResponds: ServerRespond[]) => {
-      // Update the state by creating a new array of data that consists of
-      // Previous data in the state and the new data from server
-      this.setState({ data: [...this.state.data, ...serverResponds] });
-    });
+    // defines incrementing variable
+    let incrementor = 0;
+    // interval defines the interval to update the graph by the given value, then the data is received,
+    // and finally the graph will be shown by setting the value to true
+    const interval = setInterval(() => {
+      DataStreamer.getData((serverResponds: ServerRespond[]) => {
+        this.setState({
+          data: serverResponds,
+          showGraph: true,
+        });
+      });
+      // updates the incrementor and then checks to see if it's greater than 1000, and if so
+      // the interval is cancelled
+      incrementor++;
+      if (incrementor > 1000){
+        clearInterval(interval);
+      }
+    }, 100);
   }
 
   /**
